@@ -213,7 +213,7 @@ dbt docs generate
 dbt docs serve --port 8081
 ```
 
-Open port 8081 through Coder's port forwarding (the workspace page lists the open ports).
+Then click the **dbt docs** button on the workspace page in Coder (keep the terminal open; Ctrl+C stops the server).
 
 ### 12. Save your work in git
 
