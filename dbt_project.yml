@@ -1,0 +1,24 @@
+name: lakehouse_poc
+version: "1.0.0"
+config-version: 2
+profile: lakehouse
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+# Raw CSV tables live in the Trino catalog `raw` (Hive connector, file metastore on S3), loaded by
+# `hatch run lakehouse load`. Staging models are ephemeral (no objects in the lake); marts are Iceberg tables
+# in the Harmony catalog (profile target: catalog DBT_LAKE_CATALOG, schema DBT_LAKE_SCHEMA). Trino 2.1 names
+# that catalog `iceberg-awc`; the hyphen needs a quoted database name.
+quoting:
+  database: true
+
+models:
+  lakehouse_poc:
+    staging:
+      +materialized: ephemeral
+    marts:
+      +materialized: table

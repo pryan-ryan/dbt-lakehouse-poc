@@ -1,0 +1,25 @@
+# dbt-trino profile. Every value comes from the environment: `hatch run lakehouse dbt-env` writes
+# console/local/dbt-trino.env, and the Coder workspace sets the same variables. No secret is stored here.
+#
+# Authentication: the Lakehouse Engine's Trino coordinator accepts the AWC Console JWT as a bearer token
+# (method jwt). The token expires: refresh it with `hatch run lakehouse dbt-env` on the workstation, or `trino-login`
+# in a Coder workspace (where DBT_LAKE_SCHEMA is the user's own schema). If the coordinator is set up for
+# LDAP or password login instead, set TRINO_AUTH=ldap and TRINO_PASSWORD.
+lakehouse:
+  target: "{{ env_var('DBT_TARGET', 'poc') }}"
+  outputs:
+    poc:
+      type: trino
+      method: "{{ env_var('TRINO_AUTH', 'jwt') }}"
+      host: "{{ env_var('TRINO_HOST') }}"
+      port: "{{ env_var('TRINO_PORT', '443') | int }}"
+      http_scheme: https
+      cert: true  # verify the endpoint's certificate (public CA through cert-manager)
+      user: "{{ env_var('TRINO_USER', 'admin') }}"
+      jwt_token: "{{ env_var('TRINO_JWT', '') }}"
+      password: "{{ env_var('TRINO_PASSWORD', '') }}"
+      database: "{{ env_var('DBT_LAKE_CATALOG', 'iceberg-awc') }}"
+      schema: "{{ env_var('DBT_LAKE_SCHEMA', 'marts') }}"
+      threads: 4
+      session_properties:
+        query_max_run_time: 30m

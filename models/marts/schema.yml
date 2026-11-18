@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: fct_orders
+    description: One row per order line with revenue (Iceberg, Harmony catalog).
+    columns:
+      - name: order_id
+        data_tests: [unique, not_null]
+      - name: customer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+      - name: status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['shipped', 'pending', 'cancelled']
+  - name: dim_customers
+    description: Customers with their shipped orders and revenue (Iceberg, Harmony catalog).
+    columns:
+      - name: customer_id
+        data_tests: [unique, not_null]
