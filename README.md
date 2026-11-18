@@ -150,13 +150,18 @@ dbt show --inline "select * from {{ ref('targets') }}"
 dbt guesses the column types; set them in `seeds/schema.yml` (`column_types`) when it guesses wrong. A rerun
 replaces the rows, and `dbt build` loads all seeds first. Commit the file to keep it.
 
-**Tables you define yourself: SQL.** In any Trino client (or `dbt show --inline`), as long as the schema is yours:
+**Tables you define yourself: SQL.** Run the statements with the project's `run_sql` macro (or in any Trino
+client), as long as the schema is yours. `dbt show --inline` cannot run DDL: it appends a `limit`.
 
-```sql
-create schema if not exists raw.user001_files;
-create table raw.user001_files.budget (region varchar, year integer, budget decimal(12, 2));
-insert into raw.user001_files.budget values ('Nordics', 2025, 1000.00);
+```bash
+dbt run-operation run_sql --args '{sql: "create schema if not exists raw.user001_files"}'
+dbt run-operation run_sql --args '{sql: "create table raw.user001_files.budget (region varchar, year integer, budget decimal(12, 2))"}'
+dbt run-operation run_sql --args "{sql: \"insert into raw.user001_files.budget values ('Nordics', 2025, 1000.00)\"}"
+dbt run-operation run_sql --args '{sql: "select * from raw.user001_files.budget"}'
 ```
+
+When the SQL itself contains single quotes, wrap the arguments in double quotes and escape the inner ones (`\"`),
+as in the insert above.
 
 Declare such a table as a dbt source (in `models/sources.yml`, with `database: raw` and
 `schema: user001_files`) and select from it with `source()`.
