@@ -93,8 +93,21 @@ dbt show --select fct_orders --limit 5
 dbt show --inline "select country, count(*) as customers, sum(shipped_revenue) as revenue from {{ ref('dim_customers') }} group by 1 order by 3 desc"
 ```
 
-You can also query the tables from any Trino client (the Lakehouse UI's SQL editor, for example) as
-`select * from "iceberg-awc".<username>.fct_orders`. The catalog name contains a hyphen, so it needs the quotes.
+**SQL editor in the browser (CloudBeaver):** click **SQL editor** on your workspace page. The connection
+**Lakehouse Trino (&lt;username&gt;)** is ready: expand it to browse `iceberg-awc`, `raw` and `system` (you see only
+your own schemas), click **SQL** in the toolbar, type a query and run it with the play button (or Cmd/Ctrl+Enter):
+
+```sql
+select * from "iceberg-awc".<username>.revenue_by_region
+```
+
+It runs as you, with the token of `trino-login` (a small proxy in the workspace adds it to every call), so the same
+access rules apply. When the token has expired, queries fail with `401`: run `trino-login` in the terminal and run the
+query again. Scripts you type in the editor are not saved when the workspace restarts: keep SQL you want to keep in
+`~/project` (for example as an `analyses/` file) and commit it.
+
+You can also query the tables from any other Trino client as `select * from "iceberg-awc".<username>.fct_orders`.
+The catalog name contains a hyphen, so it needs the quotes.
 
 ### 6. Run parts of the pipeline
 
@@ -211,3 +224,5 @@ workspace can still pull updates at the next start.
 | `Access Denied: Cannot select from table ...` | The table is in another user's schema; ask the platform team for access. |
 | `dbt: command not found` | The first start is still installing dbt; wait a minute and open a new terminal. |
 | The workspace did not pull new commits | You have uncommitted changes in `~/project`: commit or stash them, then `git pull`. |
+| SQL editor: `Failed to connect to /127.0.0.1:8091` | The token proxy is not running: restart the workspace (or run `nohup python3 ~/bin/trino-proxy.py >/tmp/trino-proxy.log 2>&1 &`). |
+| SQL editor: `401` | The token expired or is missing: run `trino-login`, then run the query again. |
