@@ -19,7 +19,7 @@ flowchart LR
     STGR["stg_country_regions"]
   end
 
-  subgraph marts["Marts: Iceberg tables in &quot;iceberg-awc&quot;.&lt;you&gt;"]
+  subgraph marts["Marts: Iceberg tables in iceberg-awc.&lt;you&gt;"]
     FCT["fct_orders"]
     DIM["dim_customers"]
     REG["revenue_by_region"]
