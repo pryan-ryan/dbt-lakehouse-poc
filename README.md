@@ -203,6 +203,28 @@ git push -u origin my-change     # needs your own GitHub credentials (a personal
 dbt's output folders (`target/`, `logs/`) are ignored by git, so running dbt keeps the working tree clean and the
 workspace can still pull updates at the next start.
 
+### 12. Clean up (drop your tables)
+
+`cleanup` drops the tables and views in your own schemas (`<username>` and `<username>_*`, in `iceberg-awc` and
+`raw`) and then the schemas. Shared schemas (`landing`, `marts`) and other users' schemas are never touched. It is a
+dry run unless you pass `dry_run: false`:
+
+```bash
+dbt run-operation cleanup                              # list what would be dropped
+dbt run-operation cleanup --args '{dry_run: false}'    # drop it
+```
+
+Options (combine them in `--args`):
+
+| Option | Effect |
+| --- | --- |
+| `schemas: [<username>_dev]` | only these schemas |
+| `keep_schemas: true` | drop the tables and views, keep the empty schemas |
+| `include_raw: false` | leave the `raw` catalog alone (your seeds and your own raw tables) |
+
+`dbt build` creates the seeds and marts again. Tables you created by hand (step 9) are gone for good. The Lakehouse
+catalog (Data 360) may keep showing the dropped tables in lineage history.
+
 ## Settings
 
 `profiles.yml` holds no credentials; every value comes from the environment, set by the workspace:
