@@ -1,0 +1,15 @@
+version: 2
+
+seeds:
+  - name: country_regions
+    description: >
+      Your own raw data: a CSV file in this repository, loaded by `dbt seed` (or `dbt build`) into your personal raw
+      schema `raw.<your schema>_raw` (Hive catalog, files in the raw S3 bucket).
+    config:
+      column_types:
+        country: varchar
+        country_name: varchar
+        region: varchar
+    columns:
+      - name: country
+        data_tests: [unique, not_null]

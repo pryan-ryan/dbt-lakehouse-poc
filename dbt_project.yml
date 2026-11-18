@@ -5,6 +5,7 @@ profile: lakehouse
 
 model-paths: ["models"]
 macro-paths: ["macros"]
+seed-paths: ["seeds"]
 test-paths: ["tests"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
@@ -15,6 +16,13 @@ clean-targets: ["target", "dbt_packages"]
 # that catalog `iceberg-awc`; the hyphen needs a quoted database name.
 quoting:
   database: true
+
+# Your own raw data: CSV files in seeds/ are loaded by `dbt seed` (and `dbt build`) into the Hive catalog `raw`,
+# schema `<your lake schema>_raw` (for example raw.user001_raw); DBT_SEED_SCHEMA overrides it.
+seeds:
+  lakehouse_poc:
+    +database: "{{ env_var('DBT_RAW_CATALOG', 'raw') }}"
+    +schema: "{{ env_var('DBT_SEED_SCHEMA', target.schema ~ '_raw') }}"
 
 models:
   lakehouse_poc:

@@ -23,3 +23,14 @@ models:
     columns:
       - name: customer_id
         data_tests: [unique, not_null]
+      - name: country
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('country_regions')
+                field: country
+  - name: revenue_by_region
+    description: Shipped revenue per region; joins the shared raw layer with your own seed (Iceberg, Harmony catalog).
+    columns:
+      - name: region
+        data_tests: [unique, not_null]
