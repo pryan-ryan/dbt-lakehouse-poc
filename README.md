@@ -58,6 +58,10 @@ Sign in to Coder with your Keycloak login, create a workspace from the template 
 existing one) and open **VS Code** or the **Terminal**. The first start installs dbt (about 1 minute) and clones
 this repository to `~/project`. Every later start pulls the latest commits, unless you have uncommitted changes.
 
+Every new terminal shows a short list of the main steps and whether your Trino token is still valid. Type
+`poc-help` for all steps. The buttons on the workspace page open **VS Code**, the **Terminal**, the **SQL editor**,
+this **Guide** and the **Lineage** of your marts in Unified Data Fabric (step 6).
+
 ### 2. Sign in to Trino (once a day)
 
 ```bash
@@ -109,7 +113,27 @@ query again. Scripts you type in the editor are not saved when the workspace res
 You can also query the tables from any other Trino client as `select * from "iceberg-awc".<username>.fct_orders`.
 The catalog name contains a hyphen, so it needs the quotes.
 
-### 6. Run parts of the pipeline
+### 6. See the lineage in Unified Data Fabric (UDF)
+
+Every query dbt runs through Trino is recorded by UDF, the Lakehouse's data catalog. It shows which tables a table
+was built from, across the raw (Hive) and lake (Iceberg) catalogs.
+
+1. Click **Lineage** on your workspace page (sign in with your Keycloak login if asked). It opens the lineage of
+   `"iceberg-awc".<username>.revenue_by_region`.
+2. Without the button: open UDF, go to **Data 360**, search for `revenue_by_region` and open the entry of type
+   **Trino Table** whose path contains your schema (not the "SQL Query" or "IRC Table" entries), then open
+   **Lineage**.
+3. **Lineage Graph** shows the direct inputs (`dim_customers` and your `country_regions`). **Cross System
+   Lineage** shows the whole chain: `raw.landing.customers|orders|products` -> `fct_orders` -> `dim_customers`
+   (+ `raw.<username>_raw.country_regions`) -> `revenue_by_region`.
+4. Compare it with the dbt graph (`dbt docs`, step 11): the staging models are ephemeral (compiled into the marts),
+   so UDF shows the raw tables feeding the marts directly.
+5. After you add a model (step 9) and run `dbt build`, search for it in Data 360: its lineage appears once UDF
+   has processed the queries (usually a few minutes).
+
+Entries named `*__dbt_tmp` or `*__dbt_backup` are temporary tables dbt creates while replacing a table; ignore them.
+
+### 7. Run parts of the pipeline
 
 ```bash
 dbt ls                               # list models, sources and tests
@@ -118,7 +142,7 @@ dbt run --select +dim_customers      # a model and everything upstream of it
 dbt test --select dim_customers      # only the tests of one model
 ```
 
-### 7. Work in a separate schema
+### 8. Work in a separate schema
 
 ```bash
 DBT_LAKE_SCHEMA="${TRINO_USER}_dev" dbt build    # for example into user001_dev and raw.user001_dev_raw
@@ -126,7 +150,7 @@ DBT_LAKE_SCHEMA="${TRINO_USER}_dev" dbt build    # for example into user001_dev 
 
 Without the prefix, dbt uses your main schema again.
 
-### 8. Add your own model
+### 9. Add your own model
 
 Create `models/marts/revenue_by_category.sql`:
 
@@ -142,7 +166,7 @@ group by 1
 
 Then `dbt run --select revenue_by_category` and `dbt show --select revenue_by_category`.
 
-### 9. Add your own raw data
+### 10. Add your own raw data
 
 **Small files (up to a few MB): a dbt seed.** Put a CSV file with a header line in `seeds/`, for example
 `seeds/targets.csv`:
@@ -182,7 +206,7 @@ Declare such a table as a dbt source (in `models/sources.yml`, with `database: r
 **Large files** cannot be uploaded from the workspace (you have no S3 credentials): ask the platform team to add
 them to the shared raw layer (`hatch run lakehouse load`).
 
-### 10. Documentation
+### 11. Documentation
 
 ```bash
 dbt docs generate
@@ -191,7 +215,7 @@ dbt docs serve --port 8081
 
 Open port 8081 through Coder's port forwarding (the workspace page lists the open ports).
 
-### 11. Save your work in git
+### 12. Save your work in git
 
 ```bash
 git checkout -b my-change
@@ -203,7 +227,7 @@ git push -u origin my-change     # needs your own GitHub credentials (a personal
 dbt's output folders (`target/`, `logs/`) are ignored by git, so running dbt keeps the working tree clean and the
 workspace can still pull updates at the next start.
 
-### 12. Clean up (drop your tables)
+### 13. Clean up (drop your tables)
 
 `cleanup` drops the tables and views in your own schemas (`<username>` and `<username>_*`, in `iceberg-awc` and
 `raw`) and then the schemas. Shared schemas (`landing`, `marts`) and other users' schemas are never touched. It is a
@@ -222,7 +246,7 @@ Options (combine them in `--args`):
 | `keep_schemas: true` | drop the tables and views, keep the empty schemas |
 | `include_raw: false` | leave the `raw` catalog alone (your seeds and your own raw tables) |
 
-`dbt build` creates the seeds and marts again. Tables you created by hand (step 9) are gone for good. The Lakehouse
+`dbt build` creates the seeds and marts again. Tables you created by hand (step 10) are gone for good. The Lakehouse
 catalog (Data 360) may keep showing the dropped tables in lineage history.
 
 ## Settings
