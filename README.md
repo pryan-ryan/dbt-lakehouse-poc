@@ -10,7 +10,7 @@ flowchart LR
     CSV["data/*.csv"] -->|"upload to S3 and<br/>CREATE TABLE (Hive CSV)"| RAW["customers<br/>orders<br/>products<br/>(all varchar)"]
   end
 
-  subgraph own["Your raw layer: raw.&lt;you&gt;_raw"]
+  subgraph own["Your raw layer: raw.(you)_raw"]
     SEEDCSV["seeds/*.csv<br/>in your git repo"] -->|dbt seed| SEED["country_regions"]
   end
 
@@ -19,7 +19,7 @@ flowchart LR
     STGR["stg_country_regions"]
   end
 
-  subgraph marts["Marts: Iceberg tables in iceberg-awc.&lt;you&gt;"]
+  subgraph marts["Marts: Iceberg tables in iceberg-awc.(you)"]
     FCT["fct_orders"]
     DIM["dim_customers"]
     REG["revenue_by_region"]
